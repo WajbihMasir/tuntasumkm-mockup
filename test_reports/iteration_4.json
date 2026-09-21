@@ -1,0 +1,40 @@
+{
+  "summary": "Frontend-only routing and UI regression for landing/dashboard split completed on preview URL. All requested flows passed, including CTA routing, anchor behavior, dashboard route integrity, mobile nav behaviors, state persistence, and reset.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/root/.emergent/automation_output/20260921_115301/console_20260921_115301.log",
+    "/root/.emergent/automation_output/20260921_115428/console_20260921_115428.log"
+  ],
+  "screenshots": [
+    "/app/test_reports/artifacts_iter4/iter4-final-landing.jpeg",
+    "/root/.emergent/automation_output/20260921_115301/screenshot_1.png",
+    "/root/.emergent/automation_output/20260921_115428/screenshot_1.png"
+  ],
+  "action_items": [
+    "No blocking issues found in requested scope.",
+    "Optional: review repeated Framer Motion warning ('container has a non-static position') seen in console; non-blocking for current behavior."
+  ],
+  "critical_code_review_comments": [
+    "No critical code defects found in the requested landing/dashboard integration scope."
+  ],
+  "updated_files": [
+    "/app/test_reports/iteration_4.json"
+  ],
+  "success_rate": {
+    "backend": "N/A (frontend-only scope)",
+    "frontend": "99%"
+  },
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Validated: / loads original landing (no AppShell), CTA nav-demo/hero-demo/workspace-try-demo/closing-demo all route to /dashboard, and back-to-landing-link returns to /. /dashboard direct load + refresh stable with nav-dashboard active and brand-link href=/dashboard. /percakapan,/pesanan,/produk,/analitik,/pengaturan routes preserved AppShell and nav operation. Unknown path redirects to /. Anchor links (Solusi/Cara kerja/Dampak/FAQ), direct /#faq behavior, back-to-top, FAQ accordion, workflow tabs, and hero inline approval illustration all functioned. Desktop layout checks passed (dashboard metrics-grid 4 columns; landing impact metrics 3 columns). Mobile 390 and 360 checks passed for menu toggle, mobile-nav-demo routing, menu auto-close on selection, anchor reachability, and no global horizontal overflow. Settings store name persisted across landing/dashboard transitions and reload; reset demo executed at end restoring default store name 'Ruang Rupa'. No console errors and no /api business calls detected in tested flows.",
+  "rca of the issue": "No product bug RCA required. One initial automation FAIL for hero-how-it-works was reproduced as a script-state artifact (clicked while already on #faq context), then retested in isolation and passed with URL #cara-kerja and correct scroll target."
+}
