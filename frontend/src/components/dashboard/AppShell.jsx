@@ -1,0 +1,33 @@
+import { useState } from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, MessageSquare, ShoppingBag, Package, ChartNoAxesCombined, Settings, ChevronDown, ChevronRight, Bell, CircleHelp, Menu, X, Store, Sparkles, ShieldCheck, ArrowUpRight, CheckCheck } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../ui/dialog';
+import { useStore } from '../../lib/store';
+import { Avatar } from './Shared';
+
+const links = [{ path: '/', label: 'Ringkasan', icon: LayoutDashboard }, { path: '/percakapan', label: 'Percakapan', icon: MessageSquare }, { path: '/pesanan', label: 'Pesanan', icon: ShoppingBag }, { path: '/produk', label: 'Produk & Stok', icon: Package }, { path: '/analitik', label: 'Analitik', icon: ChartNoAxesCombined }];
+export const AppShell = ({ children }) => {
+  const { settings, orders, chats } = useStore();
+  const [mobile, setMobile] = useState(false); const [dialog, setDialog] = useState(null);
+  const location = useLocation(); const navigate = useNavigate();
+  const pending = orders.filter(o => o.status === 'Menunggu persetujuan').length;
+  const unread = chats.filter(c => c.unread).length;
+  const current = links.find(l => l.path === location.pathname)?.label || 'Pengaturan';
+  return <div className="app-shell">
+    {mobile && <button className="sidebar-overlay" data-testid="sidebar-overlay" aria-label="Tutup navigasi" onClick={() => setMobile(false)} />}
+    <aside className={`sidebar ${mobile ? 'mobile-open' : ''}`}>
+      <NavLink to="/" className="brand" data-testid="brand-link" onClick={() => setMobile(false)}><img src="/images/brand-mark.png" alt="" /><span>Tuntas<span>UMKM</span><small>Dari Percakapan, Jadi Penjualan.</small></span></NavLink>
+      <button className="store-selector" data-testid="store-selector" onClick={() => { navigate('/pengaturan'); setMobile(false); }}><span className="store-logo"><ShoppingBag size={19} /></span><span><strong data-testid="sidebar-store-name">{settings.name}</strong><small>Toko Anda</small></span><ChevronDown size={15} /></button>
+      <div className="nav-label">RUANG KERJA</div><nav aria-label="Navigasi utama">{links.map(({ path, label, icon: Icon }) => <NavLink key={path} to={path} end={path === '/'} onClick={() => setMobile(false)} data-testid={`nav-${path === '/' ? 'dashboard' : path.slice(1)}`} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><Icon size={19} strokeWidth={1.7} /><span>{label}</span>{path === '/percakapan' && unread > 0 && <b className="nav-count neutral">{unread}</b>}{path === '/pesanan' && pending > 0 && <b className="nav-count">{pending}</b>}</NavLink>)}</nav>
+      <div className="nav-divider" /><NavLink className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} to="/pengaturan" data-testid="nav-pengaturan" onClick={() => setMobile(false)}><Settings size={19} strokeWidth={1.7} /><span>Pengaturan</span></NavLink>
+      <div className="sidebar-bottom"><div className="assistant-mini"><div><span className="assistant-symbol"><Sparkles size={17} /></span><strong>Asisten Tuntas</strong><i className={`live-dot ${!settings.assistant ? 'paused' : ''}`} /></div><p data-testid="sidebar-assistant-status">{settings.assistant ? 'Siap bantu bisnis Anda' : 'Asisten sedang dijeda'}</p><span className="assistant-mini-note"><ShieldCheck size={13} />Anda tetap pegang kendali</span></div>
+      <button className="nav-item help-link" data-testid="help-button" onClick={() => setDialog('help')}><CircleHelp size={19} /><span>Pusat Bantuan</span><ArrowUpRight size={15} /></button><div className="sidebar-user"><Avatar name={`Rina Pemilik`} color="peach" small /><div><strong data-testid="sidebar-owner">{settings.owner}</strong><small>Pemilik usaha</small></div><button className="icon-button" data-testid="profile-settings-button" aria-label="Pengaturan profil" onClick={() => { navigate('/pengaturan'); setMobile(false); }}><ChevronRight size={16} /></button></div></div>
+    </aside>
+    <div className="main-shell"><header className="topbar"><div className="breadcrumb"><button className="icon-button mobile-menu" aria-label="Buka navigasi" data-testid="mobile-menu-button" onClick={() => setMobile(true)}><Menu size={22} /></button><LayoutDashboard size={16} /><span>Ruang kerja</span><ChevronRight size={13} /><strong data-testid="breadcrumb-current">{current}</strong></div><div className="topbar-actions"><span className="demo-badge" data-testid="demo-mode-badge"><span />Mode demo</span><span className="header-divider" /><button className="notification-button icon-button" data-testid="notifications-button" aria-label="Notifikasi" onClick={() => setDialog('notifications')}><Bell size={19} />{pending > 0 && settings.notifications && <i />}</button><button className="profile-button" data-testid="topbar-profile-button" onClick={() => navigate('/pengaturan')} aria-label="Buka profil"><Avatar name="Rina Pemilik" color="peach" small /></button></div></header>
+      <main key={location.pathname} className="page-content">{children}<footer className="app-footer"><span>© 2026 TuntasUMKM</span><span>Operasional lebih ringan. Bisnis lebih tuntas.<CheckCheck size={14} /></span></footer></main>
+    </div>
+    <Dialog open={!!dialog} onOpenChange={open => !open && setDialog(null)}><DialogContent className="app-modal" data-testid="shell-dialog"><DialogTitle data-testid="shell-dialog-title">{dialog === 'help' ? 'Ada yang bisa kami bantu?' : 'Notifikasi'}</DialogTitle><DialogDescription data-testid="shell-dialog-description">{dialog === 'help' ? 'Ruang bantuan TuntasUMKM' : `${pending} pesanan menunggu keputusan Anda`}</DialogDescription>
+      {dialog === 'help' ? <div className="help-content"><h3>Apa yang terjadi setelah pesanan disetujui?</h3><p>Pesanan berpindah ke status Diproses. Anda dapat menandainya Selesai dari halaman Pesanan.</p><h3>Apakah pesan dikirim ke WhatsApp?</h3><p>Tidak. Semua data, percakapan, dan tindakan di ruang demo ini tersimpan hanya di browser Anda.</p><h3>Bagaimana mengulang dari awal?</h3><p>Buka Pengaturan, lalu pilih Reset data demo.</p></div> : <div className="notification-list">{pending === 0 ? <p data-testid="notifications-empty">Semua sudah tuntas. Tidak ada persetujuan tertunda.</p> : orders.filter(o => o.status === 'Menunggu persetujuan').map(o => <button key={o.id} data-testid={`notification-${o.id}`} onClick={() => { navigate(`/pesanan?order=${o.id}`); setDialog(null); }}><span className="notification-icon"><ShoppingBag size={18} /></span><span><strong>{o.name}</strong><small>Pesanan #{o.id} siap ditinjau</small></span><ChevronRight size={16} /></button>)}</div>}
+    </DialogContent></Dialog>
+  </div>;
+};
