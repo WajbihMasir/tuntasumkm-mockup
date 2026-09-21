@@ -212,19 +212,21 @@ Seluruh kasus AC01–AC25 dalam dokumen [aturan operasional](ATURAN-OPERASIONAL-
 
 Target dampak bisnis tidak menjadi janji selesai dalam 20 hari. Konversi membutuhkan cohort 7 hari yang matang; penghematan waktu memerlukan baseline pembanding.
 
-## 11. Keputusan yang masih terbuka
+## 11. Keputusan teknis dan gerbang yang tersisa
+
+**Pembaruan T01–T05:** pengguna memberi mandat untuk menetapkan pilihan beserta alasan, kebutuhan kredensial dan batasan dalam dokumen. [Keputusan teknis T01–T05](KEPUTUSAN-TEKNIS-TUNTASUMKM.md) menjadi acuan teknis pendamping; D01–D05 dan versi kebijakan produk 1.1.0 tidak berubah. Pilihan model berasal langsung dari pengguna; keputusan teknis lainnya ditetapkan melalui mandat ini, bukan kutipan pilihan vendor terpisah dari pengguna.
 
 | ID | Keputusan | Status / batas |
 |---|---|---|
-| T01 | Database dan rancangan teknis final | FastAPI + PostgreSQL masih rekomendasi; MongoDB transaction-capable alternatif. Persetujuan D01–D05 bukan persetujuan migrasi database |
-| T02 | Metode login/session dan pemulihan akun | Owner-only sudah dikunci, penyedia/metode auth belum dipilih |
-| T03 | Provider WhatsApp, akun/nomor, template dan akses | Kanal WhatsApp disetujui; vendor/credential belum dipilih atau dipasang |
-| T04 | Provider/model AI, evaluasi bahasa, token/biaya dan pengolahan data | Batas kewenangan terkunci; model/anggaran belum ditetapkan |
-| T05 | Provider ongkir, layanan, coverage dan kontrak quote | Kalkulasi saja, tanpa booking; default freshness internal tersedia, perilaku provider perlu verifikasi |
-| T06 | Profil beban, uptime, recovery, retensi dan legal/privacy | Invariant keamanan berlaku; angka kapasitas/RPO/RTO/retensi belum ditetapkan, wajib sebelum pilot data nyata |
-| T07 | Toko pilot, baseline, staffing dan kalender eksekusi | Scope produk terkunci; peserta/riset/jadwal 20 hari belum menjadi komitmen |
+| T01 | PostgreSQL + SQLAlchemy/Alembic; FastAPI + worker/outbox | **Pilihan ditetapkan untuk rencana**, belum dipasang/migrasi. Hosting/region/backup dan kesiapan lingkungan target mengikuti T06; MongoDB template tetap utuh |
+| T02 | Email/password kustom, Argon2id, opaque server-side session cookie | **Pilihan ditetapkan**; owner-only, invite-only pilot, CSRF dan revokasi sesi; Resend untuk undangan/reset. Belum ada akun/login nyata |
+| T03 | Meta WhatsApp Cloud API langsung | **Provider ditetapkan**; akun/nomor, akses aset/app, token, template dan kelayakan kebijakan belum diaktifkan/diverifikasi |
+| T04 | BYNARA/NaraRouter, model persis `agnes-2.5-flash` | **Provider/model ditetapkan**; Chat Completions non-streaming, tanpa fallback model otomatis. Entitlement, inference, JSON/tool capabilities, biaya dan privacy belum diuji |
+| T05 | RajaOngkir API V2 melalui Komerce; URL provider `/api/v1` | **Provider ditetapkan**; quote domestik saja, tanpa booking. Key/paket/coverage/uji nyata belum tersedia; freshness internal 15 menit bila provider tidak memberi expiry |
+| T06 | Profil beban, uptime, recovery, retensi dan legal/privacy | **Masih terbuka**; termasuk biaya/token/deadline AI, lokasi data dan ketentuan provider; wajib sebelum pilot data nyata |
+| T07 | Toko pilot, baseline, staffing dan kalender eksekusi | **Masih terbuka**; peserta/riset/jadwal 20 hari belum menjadi komitmen |
 
-T01–T07 tidak menghalangi penguncian kebijakan produk, tetapi menahan keputusan teknis/pilot terkait. Memperoleh lampiran sumber lengkap tetap berguna untuk bukti masalah; tidak diperlukan untuk menebak kembali tujuh tahap v1.1 yang sudah disetujui.
+T01–T05 ditutup pada **pemilihan**, bukan aktivasi atau penerimaan integrasi. Tidak ada izin baru implementasi; frontend tetap MOCKED dan backend bisnis belum dibuat. Memperoleh lampiran sumber lengkap tetap berguna untuk bukti masalah; tidak diperlukan untuk menebak kembali tujuh tahap v1.1 yang sudah disetujui.
 
 ## 12. Pengendalian perubahan
 

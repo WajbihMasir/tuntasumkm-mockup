@@ -108,6 +108,8 @@ Semua aksi penting menyimpan ID event, tenant, actor/jenis actor, waktu server, 
 - [x] Policy AI/owner, versi draft, persetujuan, stok dan penyelesaian dituangkan.
 - [x] Pembatalan/restock dipindahkan ke P0; idempotensi, kondisi barang dan audit didefinisikan.
 - [x] KPI p95, window 7 hari dan batas klaim dampak didefinisikan.
-- [ ] T01–T07 diputuskan pada tahap teknis/persiapan pilot yang relevan.
+- [x] Pemilihan T01–T05 ditetapkan dalam [keputusan teknis](KEPUTUSAN-TEKNIS-TUNTASUMKM.md): PostgreSQL, email/password dengan session cookie, Meta Cloud API, BYNARA `agnes-2.5-flash`, RajaOngkir/Komerce; Resend untuk email recovery.
+- [ ] Akun, kredensial, akses, kontrak dan uji provider nyata diverifikasi; penetapan vendor bukan aktivasi.
+- [ ] T06–T07 diputuskan: beban/biaya/privacy/retensi/recovery dan pilot/baseline/resource.
 - [ ] Pengguna memberikan instruksi eksplisit untuk implementasi.
 - [ ] Backend nyata dibuat dan AC01–AC25 diverifikasi; checklist ini bukan hasil pengujian produk.

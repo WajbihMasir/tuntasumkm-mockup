@@ -11,10 +11,10 @@ Pengguna menyetujui D01–D05. Acuan aktif: [PRD v1.1](PRD-TUNTASUMKM-v1.1.md) d
 | G01 | Bukti masalah asli masih terbuka | Pemetaan kerja turunan ada pada PRD §1, bukan klaim isi empat lapisan asli atau riset yang terbukti |
 | G02–G03 | Ditutup untuk baseline produk v1.1 | D02 dan PRD §4: tujuh tahap disetujui; stage 6 keputusan owner, respons awal boleh sebelumnya |
 | G04–G05 | Ditutup pada scope/kewenangan | D01–D02 dan PRD §3–5; pilih toko pilot aktual masih T07 |
-| G06 | Owner-only/isolation ditetapkan; teknologi auth terbuka | PRD §5, T02; implementasi akses belum ada |
+| G06 | Owner-only/isolation dan metode auth ditetapkan | T02: email/password + opaque session cookie, Argon2id, Resend untuk recovery; akses belum diimplementasikan |
 | G07–G10 | Kebijakan inti ditutup | D03–D04, PRD §6–7: TuntasUMKM sumber stok, no reservation, version checks, selesai sesudah handover, cancel/restock P0 |
-| G11–G12 | Batas produk tersedia; provider terbuka | T03/T05; quote saja tanpa booking, freshness default turunan 15 menit bila provider tidak memberi expiry |
-| G13 | Batas AI ditutup; model/evaluasi belum dipilih | D02, PRD §5/8 dan T04 |
+| G11–G12 | Provider ditetapkan; aktivasi/coverage belum diverifikasi | T03 Meta Cloud API, T05 RajaOngkir/Komerce; quote saja tanpa booking, freshness internal 15 menit bila provider tidak memberi expiry |
+| G13 | Batas AI dan provider/model ditetapkan; evaluasi belum dilakukan | T04 BYNARA `agnes-2.5-flash`; schema/policy server wajib; JSON/tool capabilities dan privacy model belum terverifikasi |
 | G14–G15 | Invariant/failure/handoff dispesifikasikan; belum diimplementasikan | PRD §8, SOP D dan AC05–AC21 |
 | G16 | KPI operasional didefinisikan | D05, PRD §9; p95, failure, cohort matang 168 jam. Bukti/sampel pilot belum tersedia |
 | G17–G19 | Parameter NFR, privacy/retensi dan resource masih terbuka | T06–T07; estimasi perlu memasukkan cancel/restock P0, bukan janji 20 hari |
@@ -128,14 +128,15 @@ Landing merangkum empat langkah, dashboard menampilkan tujuh tahap usulan, lampi
 
 | Keputusan | Default yang direkomendasikan | Status |
 |---|---|---|
-| Database target | PostgreSQL untuk transaksi order–stok; MongoDB transaction-capable sebagai alternatif | Menunggu persetujuan, tidak ada migrasi saat ini |
+| Database target | PostgreSQL + SQLAlchemy/Alembic, worker/outbox | **DITETAPKAN T01** untuk rencana, belum dipasang/migrasi; alternatif MongoDB hanya historis |
+| Autentikasi | Email/password kustom + Argon2id + opaque session cookie, Resend untuk undangan/reset | **DITETAPKAN T02**; owner-only/invite-only pilot; akun/credential/uji belum ada |
 | Scope MVP | WhatsApp teks Indonesia, ready-stock, satu owner/lokasi per toko, satu SKU/order | **DIKUNCI D01**; peserta pilot masih terbuka |
 | Mutasi stok | TuntasUMKM sumber stok; saat approve atomik; tidak reservasi draft | **DIKUNCI D03**, koreksi manual beralasan/audit |
 | Definisi tuntas | Owner mencatat penyerahan ke kurir/pembeli, waktu dan catatan; bukan paid/delivered | **DIKUNCI D04** |
 | Pembatalan/restock | Owner-only, alasan, kondisi fisik, restock sekali; refund di luar sistem | **DIKUNCI D04 — P0** |
 | Pipeline resmi v1.1 | Terima → lengkapi → validasi → ongkir → draft → keputusan → eksekusi | **DIKUNCI D02 melalui keputusan baru**, bukan rekonstruksi lampiran |
 | Auto-reply | Informasi tervalidasi/klarifikasi boleh sebelum approval; tidak menjamin stok/order | **DIKUNCI D02**, rincian kontrol PRD §5/8 |
-| Provider WA/LLM/ongkir | Belum dipilih; satu adapter masing-masing | Keputusan sebelum integrasi, tidak perlu credential untuk analisis ini |
+| Provider WA/LLM/ongkir | Meta Cloud API / BYNARA `agnes-2.5-flash` / RajaOngkir via Komerce | **DITETAPKAN T03–T05**; akses, onboarding, evaluasi dan live test belum selesai; lihat [keputusan teknis](KEPUTUSAN-TEKNIS-TUNTASUMKM.md) |
 | KPI | Respons p95 <5s, eksekusi p95 <10s; tunggu owner terpisah; konversi approval 7 hari | **DIKUNCI D05**; 25–30%, hemat 70%, error 0% tetap target pilot |
 
 **Kesimpulan:** gap utamanya bukan kurang banyak endpoint, tetapi belum adanya kontrak operasional yang memastikan tindakan agent benar, sah, tahan gagal, dan terukur. Fondasi transaksi manual yang benar harus dibangun sebelum AI mendapat akses mengusulkan tindakan.

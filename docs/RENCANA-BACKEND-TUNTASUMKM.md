@@ -2,18 +2,18 @@
 
 Tanggal: 21 September 2026 · Status: **PLAN teknis; baseline produk v1.1 telah dikunci, backend belum diimplementasikan**
 
-**Pembaruan keputusan:** pengguna menyetujui D01–D05. [PRD v1.1](PRD-TUNTASUMKM-v1.1.md) dan [aturan operasional](ATURAN-OPERASIONAL-TUNTASUMKM-v1.1.md) menjadi acuan kebijakan. Arsitektur, vendor, kontrak teknis dan estimasi di sini tetap usulan; tidak otomatis ikut disetujui. Pembatalan sesudah approval dan rekonsiliasi stok kini termasuk P0.
+**Pembaruan keputusan:** D01–D05 tetap mengacu [PRD v1.1](PRD-TUNTASUMKM-v1.1.md) dan [aturan operasional](ATURAN-OPERASIONAL-TUNTASUMKM-v1.1.md). Pemilihan T01–T05 kini ditetapkan melalui mandat pengguna dalam [keputusan teknis](KEPUTUSAN-TEKNIS-TUNTASUMKM.md): PostgreSQL, auth kustom session cookie, Meta Cloud API, BYNARA `agnes-2.5-flash`, RajaOngkir/Komerce; Resend mendukung reset/undangan. Aktivasi, uji integrasi, T06–T07 dan izin implementasi tetap terpisah. Pembatalan sesudah approval dan rekonsiliasi stok tetap P0.
 
 ## 1. Ringkasan keputusan
 
 TuntasUMKM perlu dibangun sebagai **sistem operasional berbantuan AI dengan persetujuan pemilik**, bukan sekadar chatbot yang diberi akses database. AI membantu memahami percakapan; keputusan stok, harga, ongkir, hak akses, dan eksekusi harus diperiksa oleh aturan server.
 
-Rekomendasi target: **FastAPI + PostgreSQL + worker terpisah + transactional outbox**, dalam satu codebase modular. Redis/queue khusus dapat ditambahkan saat kebutuhan antrean meningkat. Pertahankan React yang sudah ada. Rekomendasi PostgreSQL belum diterapkan; MongoDB sandbox tetap utuh. Alternatif tetap menggunakan MongoDB dibahas di bagian 5.
+Target ditetapkan pada perencanaan: **FastAPI + PostgreSQL + worker terpisah + transactional outbox**, dalam satu codebase modular. Redis/queue khusus hanya opsi bila kebutuhan antrean meningkat. Pertahankan React yang sudah ada. PostgreSQL belum diterapkan; MongoDB sandbox tetap utuh. Alternatif MongoDB di bagian 5 hanya riwayat pertimbangan, bukan pilihan aktif.
 
 Tiga hal harus dipisahkan:
 1. **Tertulis pada lampiran:** operasi stok/draft/ongkir, kendali pemilik, pipeline tujuh tahap, dan target dampak.
 2. **Sudah terlihat di repo:** simulasi frontend yang cukup lengkap, tetapi bukan backend bisnis.
-3. **Usulan teknis dalam dokumen ini:** kontrak API, model data, pilihan teknologi dan jadwal. Batas MVP serta kebijakan inti telah disetujui melalui PRD v1.1; pilihan teknis dan izin implementasi tetap terpisah.
+3. **Rancangan teknis dalam dokumen ini:** kontrak API, model data dan jadwal masih rancangan. Scope/kebijakan inti disetujui melalui PRD v1.1; pilihan T01–T05 ditetapkan pada keputusan teknis pendamping. Ini tidak memberi izin implementasi.
 
 **Batas kepastian:** lampiran hanya 2.314 byte, 190 baris, banyak bagian berupa judul tanpa isi. Tidak mungkin menyatakan kesesuaian 100%, nama resmi tujuh tahap, atau empat pain-point resmi dari dokumen tersebut. Bisa jadi tabel/diagram hilang saat konversi; ini temuan pada artefak yang diterima, bukan kesimpulan tentang dokumen sumber yang tidak tersedia.
 
@@ -76,7 +76,7 @@ Referensi `frontend/...` dan `backend/...` di bawah relatif terhadap repo pada c
 
 **Tidak masuk P0:** payment gateway, refund otomatis, booking kurir, multi-gudang, marketplace sync, Instagram/kanal lain, voice/OCR, loyalty, subscription billing, auto-approve, multi-agent bebas, dan microservices.
 
-## 5. Rekomendasi arsitektur
+## 5. Arsitektur target yang ditetapkan pada rencana
 
 ```text
 React yang sudah ada ── API terautentikasi ──────────────┐
@@ -105,14 +105,15 @@ WhatsApp ── verifikasi webhook ── durable inbox ──> FastAPI modular 
 | Background processing | Worker + job/outbox persisten dalam DB untuk pilot | Tidak menahan request webhook selama panggilan AI. Redis + Celery/queue khusus menjadi opsi saat throughput membutuhkannya; Redis bukan sumber kebenaran stok |
 | Frontend | Pertahankan React; gunakan satu pola query server | React Query sudah tersedia. Hindari dua sumber state bisnis antara API dan localStorage |
 | Update layar | Polling terkontrol pada P0; SSE bila diperlukan | Lebih ringan daripada memulai dengan WebSocket untuk semua fitur; real-time terotorisasi per toko |
-| AI | Satu adapter provider, structured output tervalidasi | Model belum dipilih. Pilih lewat evaluasi chat UMKM Indonesia, akurasi ekstraksi, latensi, dan biaya; bukan nama model saja |
+| AI | BYNARA `agnes-2.5-flash`, Chat Completions non-streaming | Pilihan T04; JSON teks divalidasi server, bukan mengasumsikan JSON mode/native tools. Evaluasi bahasa, latensi, biaya dan privacy masih menjadi gerbang |
+| Autentikasi | Email/password + Argon2id + opaque session cookie server-side | Pilihan T02; CSRF/revokasi/tenant check wajib; Resend hanya pengirim undangan/reset |
 | Penyimpanan file | Belum dibutuhkan untuk teks-only P0 | Object storage dibutuhkan ketika media/upload katalog ditambahkan; jangan menyimpan file besar di dokumen database |
 
-**Mengapa PostgreSQL walau template menggunakan MongoDB?** Saat ini tidak ada model/data bisnis persisten yang harus dimigrasikan. Karena itu memilih fondasi transaksi order–stok sebelum bisnis diimplementasikan lebih murah daripada menggantinya setelah sistem berkembang. Ini rekomendasi target, bukan perubahan yang dilakukan pada sandbox.
+**Mengapa PostgreSQL walau template menggunakan MongoDB?** Saat ini tidak ada model/data bisnis persisten yang harus dimigrasikan. PostgreSQL dipilih pada T01 untuk relasi dan transaksi order–stok–audit. Ini penetapan target perencanaan, bukan perubahan yang sudah dilakukan pada sandbox; lingkungan target harus tersedia sebelum implementasi.
 
-**Alternatif paling dekat dengan template:** FastAPI + MongoDB + **PyMongo Async**. Ini tetap layak jika tim lebih menguasai MongoDB, dengan syarat compound unique index, schema validation, versioning, transaksi lintas dokumen, dan desain ledger/outbox yang benar. MongoDB bukan otomatis tidak aman untuk transaksi.
+**Riwayat alternatif, bukan pilihan aktif:** FastAPI + MongoDB + PyMongo Async sempat dipertimbangkan dan secara teknis dapat mendukung transaksi dengan topologi serta desain yang tepat. T01 sekarang menetapkan PostgreSQL; tidak ada dua database sumber kebenaran bisnis pada rencana P0.
 
-**Gap lingkungan nyata:** pemeriksaan `hello` pada database sandbox tidak menemukan replica set dan bukan mongos. Jangan mengklaim transaksi lintas dokumen tersedia pada konfigurasi standalone ini. Jika memilih MongoDB untuk target, dibutuhkan topologi transaksi yang didukung. Tidak ada perubahan konfigurasi database pada tugas ini.
+**Gap lingkungan nyata:** pemeriksaan awal pada MongoDB sandbox menunjukkan standalone, bukan replica set/mongos. Template ini bukan bukti transaksi lintas dokumen siap digunakan. Tidak ada konfigurasi/database/dependensi yang diubah; backend template tetap berjalan seperti sebelumnya.
 
 **Gap dependensi:** repo memakai Motor. Dokumentasi resmi menyebut Motor deprecated sejak 14 Mei 2025, akhir dukungan perbaikan umum 14 Mei 2026, perbaikan kritis sampai 14 Mei 2027. Backend baru berbasis MongoDB sebaiknya memakai PyMongo Async; jangan menyalin dependensi lama tanpa evaluasi kompatibilitas.
 
@@ -181,11 +182,11 @@ Invariant minimum:
 
 ## 9. Kontrak API awal
 
-Semua path berikut **rencana** berprefix `/api/v1`; belum tersedia. Login/session bergantung metode auth yang dipilih. Semua resource tenant-scoped, berpaginasi dan terotorisasi.
+Semua path berikut **rencana** berprefix `/api/v1`; belum tersedia. T02 menetapkan session cookie opaque, CSRF, owner-only dan invite-only pilot. Semua resource tenant-scoped, berpaginasi dan terotorisasi.
 
 | Modul | Endpoint representatif |
 |---|---|
-| Akun | `POST /auth/login`, `POST /auth/logout`, `GET /me`; reset/invite bila auth kustom dipilih |
+| Akun | `POST /auth/login`, `POST /auth/logout`, `GET /me`, `GET /auth/csrf`, `POST /auth/accept-invite`, `POST /auth/forgot-password`, `POST /auth/reset-password`; penerbitan undangan melalui provisioning tepercaya, bukan endpoint publik |
 | Toko | `GET/PATCH /store`, `GET/PATCH /store/policies`, `GET /channels`, proses koneksi kanal sesuai provider |
 | Webhook | `GET/POST /webhooks/whatsapp` — challenge/verification dan ingestion, bukan endpoint user biasa |
 | Percakapan | `GET /conversations`, `GET /conversations/{id}`, `GET /conversations/{id}/messages` |
@@ -252,17 +253,20 @@ MVP mengikuti repo: **tidak mereservasi stok pada draft**. Draft bukan janji ket
 - Worker crash setelah commit: outbox dapat dilanjutkan; gunakan lease dan pemrosesan idempoten. Status permanen gagal masuk antrean penanganan pemilik.
 - Signature webhook tidak valid: tolak sebelum pemrosesan. Timestamp/provider ID disimpan untuk investigasi, log sensitif disamarkan.
 
-## 11. Integrasi yang perlu diputuskan, bukan langsung dipasang
+## 11. Integrasi yang ditetapkan — belum dipasang
 
-| Integrasi | Usulan awal | Keputusan/ketergantungan |
+Detail keputusan, batas bukti, konfigurasi dan uji minimal ada pada [Keputusan Teknis T01–T05](KEPUTUSAN-TEKNIS-TUNTASUMKM.md).
+
+| Integrasi | Pilihan | Ketergantungan / batas |
 |---|---|---|
-| WhatsApp | Kanal resmi: Meta Cloud API langsung atau BSP resmi | Kepemilikan akun/nomor, onboarding, credential server-side, webhook, template, opt-in yang relevan, biaya dan pembatasan. Tidak menggunakan otomatisasi WhatsApp Web tak resmi |
-| LLM | Satu provider di balik adapter; keluaran JSON tervalidasi | Model, biaya maksimum/chat, kebijakan data provider, latensi, evaluasi Bahasa Indonesia; kredensial baru diperlukan saat implementasi |
-| Ongkir | Satu agregator/penyedia yang mendukung kebutuhan Indonesia | Coverage, origin/destination ID, berat/dimensi, layanan, tarif/expiry, timeout dan akses akun; contoh kandidat bukan pilihan final |
-| Auth | Session aman, pilihan managed identity atau custom | Metode login dan pemulihan akun, owner/staff, session expiry. Bukan menganggap nomor WA pada Settings sebagai login |
-| Monitoring | Structured logs + error/latency/cost metrics | Redaksi alamat/nomor/token, alarm backlog, kegagalan provider, retensi |
+| WhatsApp | Meta WhatsApp Cloud API langsung | Aset/nomor, app secret/signature, token/izin, template dan kebijakan; inbox/outbox tahan duplikasi dan status tidak berurutan. Bukan WA Web/BSP |
+| LLM | BYNARA `agnes-2.5-flash` | `POST /v1/chat/completions`, Bearer BYNARA key, non-streaming; schema/policy server, context per percakapan; JSON/tools model belum terbukti; tidak fallback model otomatis |
+| Ongkir | RajaOngkir API V2 via Komerce, URL `/api/v1` | Header `key`, subdistrict ID, gram, form body domestic-cost; ID quote internal, expiry internal 15 menit bila provider tidak memberi. Quote saja, bukan booking |
+| Auth | Email/password kustom + Argon2id + opaque session cookie | CSRF, revokasi sesi, tenant check, invite-only owner; bukan JWT/localStorage atau akun WhatsApp sebagai login |
+| Email pemulihan | Resend | Verified domain, sending key, token undangan/reset hash sekali pakai; delivery nyata belum diuji |
+| Monitoring | Structured logs + error/latency/cost metrics | Redaksi alamat/nomor/token, alarm backlog, kegagalan provider; retensi dan batas numerik T06 masih terbuka |
 
-WhatsApp memiliki window layanan pelanggan dan aturan template; approval yang tertunda dapat melewati window. Rencana pengiriman perlu memeriksa waktu pesan masuk terakhir dan memakai template disetujui saat diwajibkan. Pemilihan BSP juga mengubah format signature/payload; detail implementasi harus mengikuti dokumentasi provider terpilih. Referensi Twilio tidak berarti Twilio telah dipilih.
+Meta memiliki window layanan pelanggan 24 jam dari pesan masuk pelanggan terakhir. Approval tertunda bisa melewati window; pesan di luarnya harus memakai template disetujui yang memenuhi kebijakan. Jika template tidak tersedia, tandai pengiriman perlu perhatian tanpa mengubah order/stok. Auto-reply informasi/klarifikasi tetap boleh menurut D02; ini bukan izin AI menyetujui transaksi. Pemilihan provider tidak membuktikan akun/nomor/model/coverage siap live.
 
 ## 12. KPI: definisi utama dikunci melalui D05
 
@@ -330,7 +334,7 @@ Tambahan wajib v1.1: serah-terima fisik, cancel dari PROCESSING/COMPLETED, kondi
 ## 16. Prioritas keputusan berikutnya
 
 1. **Selesai:** baseline PRD v1.1, scope, pipeline, kewenangan, stok, selesai/cancel dan KPI dikunci. Bukti masalah asli belum dipulihkan dan masih memerlukan validasi pilot.
-2. Putuskan T01–T07: database, auth, provider, profil beban/privacy/recovery, toko pilot, baseline dan staffing.
+2. **Selesai pada pemilihan:** T01–T05 ditetapkan dalam keputusan teknis. Berikutnya verifikasi akses/kredensial/kontrak provider dan lingkungan PostgreSQL target; putuskan T06–T07 (beban/biaya/privacy/recovery, pilot/baseline/staffing).
 3. Hitung ulang estimasi dengan cancel/restock P0; jangan menganggap 20 hari sebagai komitmen tanpa resource dan akses vendor.
 4. Setelah instruksi implementasi eksplisit, bangun **draft manual → approval → stok → audit → cancel/restock** sebelum AI.
 
@@ -344,4 +348,4 @@ Daftar gap terperinci, dampak, pemilik keputusan, dan usulan penutup ada pada **
 - Migrasi PyMongo Async: https://www.mongodb.com/docs/languages/python/pymongo-driver/current/reference/migration/
 - MongoDB transactions: https://www.mongodb.com/docs/manual/core/transactions/
 - Konsep window/template WhatsApp, dokumentasi BSP resmi: https://www.twilio.com/docs/whatsapp/key-concepts
-- Detail provider/model/kapasitas dan ketentuan data harus diverifikasi ulang saat integrasi dipilih. Tugas ini bukan audit keamanan menyeluruh, bukan implementasi integrasi, dan bukan sertifikasi kepatuhan.
+- Detail provider/model/kapasitas dan ketentuan data harus diverifikasi ulang sebelum aktivasi; pilihan T01–T05 sudah ditetapkan dalam [keputusan teknis](KEPUTUSAN-TEKNIS-TUNTASUMKM.md). Tugas ini bukan audit keamanan menyeluruh, bukan implementasi integrasi, dan bukan sertifikasi kepatuhan.
