@@ -9,6 +9,7 @@ import Products from './pages/Products';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 import './App.css';
+import './workflow.css';
 
 export default function App() {
   return <BrowserRouter><StoreProvider><AppShell><Routes>

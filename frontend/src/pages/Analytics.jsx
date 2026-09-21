@@ -1,12 +1,19 @@
 import { useState } from 'react';
-import { Clock3, CheckCheck, MessageSquare, TrendingUp, ArrowRight } from 'lucide-react';
 import { PageTitle } from '../components/dashboard/Shared';
 import { SalesChart } from '../components/dashboard/SalesChart';
 import { Metrics } from '../components/dashboard/OverviewWidgets';
 import { PeriodSelect, ExportButton } from './Dashboard';
+import { SimulationStats, PrdKpiMatrix } from '../components/workflow/SimulationStats';
+import { historicalSummary } from '../lib/analytics';
 
 export default function Analytics() {
-  const [period, setPeriod] = useState('7');
-  const impacts = [{ icon: Clock3, value: period === '7' ? '18,5 jam' : '72 jam', label: 'Waktu operasional dihemat', detail: 'Lebih banyak waktu untuk mengembangkan usaha' }, { icon: CheckCheck, value: '96,8%', label: 'Percakapan tertangani', detail: 'Pelanggan mendapatkan respons tepat waktu' }, { icon: TrendingUp, value: period === '7' ? '34,6%' : '30,7%', label: 'Konversi percakapan', detail: 'Percakapan yang berlanjut menjadi pesanan' }];
-  return <><PageTitle title="Analitik bisnis" subtitle="Lihat yang sudah bertumbuh. Temukan peluang berikutnya."><PeriodSelect period={period} setPeriod={setPeriod} /><ExportButton period={period} /></PageTitle><Metrics period={period} /><SalesChart period={period} analytics /><div className="analytics-lower"><section className="impact-section"><div className="section-title"><h2 data-testid="impact-heading">Dampak Asisten Tuntas</h2><span>Lebih ringan, lebih produktif.</span></div><div className="impact-grid">{impacts.map(({ icon: Icon, value, label, detail }, i) => <div className="impact-item" key={label}><span className="impact-icon"><Icon size={20} /></span><strong data-testid={`impact-value-${i}`}>{value}</strong><h3 data-testid={`impact-label-${i}`}>{label}</h3><p>{detail}</p></div>)}</div></section><section className="conversion-section"><h2 data-testid="conversion-heading">Dari percakapan jadi penjualan</h2>{[{ label: 'Percakapan masuk', value: period === '7' ? 486 : 1820, width: '100%' }, { label: 'Minat pembelian', value: period === '7' ? 294 : 1046, width: '65%' }, { label: 'Pesanan dibuat', value: period === '7' ? 168 : 558, width: '36%' }].map((item, i) => <div className="funnel-item" data-testid={`funnel-${i}`} key={item.label}><div><span>{item.label}</span><b>{item.value}</b></div><div className="funnel-track"><span style={{ width: item.width }} /></div></div>)}</section></div><div className="analytics-note" data-testid="analytics-note"><MessageSquare size={15} />Periode {period === '7' ? '15–21 September' : '23 Agustus–21 September'} 2026<ArrowRight size={14} />Data contoh Ruang Rupa</div></>;
+  const [period, setPeriod] = useState('7'); const [tab, setTab] = useState('kpi'); const history = historicalSummary(period);
+  return <><PageTitle title="Analitik bisnis" subtitle="Kondisi manual, target PRD, dan hasil simulasi — terpisah dan dapat ditelusuri."><PeriodSelect period={period} setPeriod={setPeriod} /><ExportButton period={period} /></PageTitle>
+    <div className="analytics-source-tabs workflow-tabs"><button data-testid="analytics-tab-kpi" className={tab === 'kpi' ? 'selected' : ''} onClick={() => setTab('kpi')}>KPI PRD & sesi lokal</button><button data-testid="analytics-tab-historical" className={tab === 'historical' ? 'selected' : ''} onClick={() => setTab('historical')}>Historis contoh</button></div>
+    {tab === 'kpi' ? <><SimulationStats /><PrdKpiMatrix /><p className="simulation-footnote" data-testid="analytics-period-scope">Pilihan 7/30 hari berlaku untuk historis contoh di laporan. Sesi lokal dihitung sejak reset dan tidak berubah saat periode historis diganti.</p></> : <>
+      <div className="historical-caption" data-testid="analytics-historical-note">Historis contoh · {period === '7' ? '15–21 September 2026' : '23 Agustus–21 September 2026'} · tidak berubah karena tindakan sesi</div>
+      <Metrics period={period} /><SalesChart period={period} analytics />
+      <section className="historical-conversion"><h2 data-testid="conversion-heading">Konversi historis contoh</h2><strong data-testid="historical-conversion-value">{(history.orders / history.chats * 100).toLocaleString('id-ID', { maximumFractionDigits: 1 })}%</strong><p data-testid="historical-conversion-formula">{history.orders} pesanan / {history.chats} percakapan</p></section>
+    </>}
+  </>;
 }
